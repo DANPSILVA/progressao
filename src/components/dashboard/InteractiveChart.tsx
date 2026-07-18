@@ -19,7 +19,7 @@ export default function InteractiveChart({ data, showCumulative }: { data: Hourl
   return (
     <div style={{ width: '100%', height: 360 }}>
       <ResponsiveContainer>
-        <AreaChart data={source} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+        <AreaChart data={source} margin={{ top: 10, right: 30, left: 8, bottom: 0 }}>
           <defs>
             <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.18} />
@@ -27,7 +27,12 @@ export default function InteractiveChart({ data, showCumulative }: { data: Hourl
             </linearGradient>
           </defs>
           <XAxis dataKey="timeLabel" tick={{ fill: 'var(--muted-300)' }} />
-          <YAxis yAxisId="left" tick={{ fill: 'var(--muted-300)' }} />
+          <YAxis
+            yAxisId="left"
+            tick={{ fill: 'var(--muted-300)' }}
+            width={56}
+            tickFormatter={(v: number) => Intl.NumberFormat('pt-BR', { notation: 'compact' }).format(v)}
+          />
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" />
           <Tooltip formatter={(value: any) => value.toLocaleString?.() ?? value} />
           <Area yAxisId="left" type="monotone" dataKey="xp" stroke="var(--accent)" fill="url(#g1)" strokeWidth={2} />
