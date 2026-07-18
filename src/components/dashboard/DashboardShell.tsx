@@ -9,7 +9,6 @@ import StatsGrid from './StatsGrid';
 import Filters from './Filters';
 import PeriodFilter from './PeriodFilter';
 import InteractiveChart from './InteractiveChart';
-import EconomyDonut from './EconomyDonut';
 import BossesDeaths from './BossesDeaths';
 import ProgressTarget from './ProgressTarget';
 import HuntForm from './HuntForm';
@@ -19,6 +18,7 @@ import XpEvolutionChart from './XpEvolutionChart';
 import ProfitPerDayChart from './ProfitPerDayChart';
 import XpPerHourSessionChart from './XpPerHourSessionChart';
 import FriendsPanel from './FriendsPanel';
+import RubinOtRanking from './RubinOtRanking';
 import { aggregateByDay, computeSummary, filterByPeriod, perSessionSeries, Character, HuntSession } from '@/lib/dashboard';
 
 function formatUpdatedAt(date: Date) {
@@ -34,6 +34,7 @@ export default function DashboardShell() {
   const [refreshing, setRefreshing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [activeTab, setActiveTab] = useState('overview');
 
   const loadData = useCallback(async () => {
     setRefreshing(true);
@@ -84,8 +85,14 @@ export default function DashboardShell() {
       </div>
       <div className="flex items-center gap-3">
         <Filters period={period} onChange={setPeriod} showCumulative={showCumulative} setShowCumulative={setShowCumulative} />
-        <button onClick={() => setShowAddForm((v) => !v)} className="btn-tibia btn-tibia--primary text-sm">
-          {showAddForm ? 'Fechar' : '+ Nova hunt'}
+        <button
+          onClick={() => {
+            setShowAddForm(true);
+            setActiveTab('history');
+          }}
+          className="btn-tibia btn-tibia--primary text-sm"
+        >
+          + Nova hunt
         </button>
       </div>
     </div>
@@ -104,7 +111,6 @@ export default function DashboardShell() {
         </div>
 
         <div className="space-y-6">
-          <EconomyDonut summary={summary} />
           <BossesDeaths summary={summary} />
           <ProgressTarget data={allSeries} summary={summary} />
         </div>
@@ -164,11 +170,14 @@ export default function DashboardShell() {
       {character && <CharacterCard character={character} onChanged={loadData} />}
 
       <Tabs
+        active={activeTab}
+        onActiveChange={setActiveTab}
         tabs={[
           { key: 'overview', label: 'Visão Geral', content: <GlassCard>{overviewTab}</GlassCard> },
           { key: 'history', label: 'Histórico de Hunts', content: historyTab },
           { key: 'stats', label: 'Estatísticas', content: statsTab },
           { key: 'friends', label: 'Amigos', content: friendsTab },
+          { key: 'ranking', label: 'Ranking RubinOT', content: <RubinOtRanking /> },
         ]}
       />
     </motion.div>

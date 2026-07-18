@@ -45,7 +45,6 @@ export default function HuntHistory({ hunts, onChanged }: { hunts: HuntSession[]
                 <th className="py-2 pr-4">XP</th>
                 <th className="py-2 pr-4">XP/h</th>
                 <th className="py-2 pr-4">Profit</th>
-                <th className="py-2 pr-4">Loot</th>
                 <th className="py-2 pr-4"></th>
               </tr>
             </thead>
@@ -59,7 +58,6 @@ export default function HuntHistory({ hunts, onChanged }: { hunts: HuntSession[]
                     <td className="py-2 pr-4">{h.xpGained.toLocaleString()}</td>
                     <td className="py-2 pr-4 text-accent">{xpPerHour.toLocaleString()}</td>
                     <td className="py-2 pr-4">{h.profit.toLocaleString()} gp</td>
-                    <td className="py-2 pr-4">{h.loot.toLocaleString()}</td>
                     <td className="py-2 pr-4 text-right whitespace-nowrap">
                       <button onClick={() => setEditing(h)} className="text-accent mr-3">
                         Editar

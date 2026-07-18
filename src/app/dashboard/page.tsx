@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth';
 
 export const metadata = {
   title: 'RubinTracker — Dashboard',
-  description: 'Visualize seus KPIs e evolução — XP, Profits, Loot, Bosses e demais métricas.'
+  description: 'Visualize seus KPIs e evolução — XP, Profit, Bosses e demais métricas.'
 };
 
 export default async function DashboardPage() {
