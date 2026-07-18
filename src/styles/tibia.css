@@ -38,6 +38,15 @@
   display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));color:var(--text-100);font-weight:600;box-shadow:0 6px 18px rgba(2,6,23,0.6);
 }
 .btn-tibia--primary{background:linear-gradient(180deg,var(--accent), #7bb14f);color:#09210a;border:1px solid rgba(0,0,0,0.4)}
+.btn-tibia:disabled{opacity:0.5;cursor:not-allowed}
+
+/* Form inputs */
+.input-tibia{
+  width:100%;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);
+  background:rgba(0,0,0,0.2);color:var(--text-100);outline:none;
+}
+.input-tibia:focus{border-color:var(--accent)}
+.label-tibia{display:block;font-size:0.8rem;color:var(--muted-300);margin-bottom:4px}
 
 /* Logo wrapper */
 .logo-mark{display:inline-flex;align-items:center;gap:10px}

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import GlassCard from '@/components/ui/GlassCard';
-import { SummaryMetrics } from '@/lib/dashboardMock';
+import { SummaryMetrics } from '@/lib/dashboard';
 
 export default function BossesDeaths({ summary }: { summary: SummaryMetrics }) {
   return (

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import GlassCard from '@/components/ui/GlassCard';
 import StatsGrid from './StatsGrid';
@@ -9,49 +9,58 @@ import InteractiveChart from './InteractiveChart';
 import LootProfit from './LootProfit';
 import BossesDeaths from './BossesDeaths';
 import ProgressTarget from './ProgressTarget';
-import { generateMockSeries, SummaryMetrics } from '@/lib/dashboardMock';
+import HuntForm from './HuntForm';
+import HuntHistory from './HuntHistory';
+import CharacterCard from './CharacterCard';
+import { aggregateByDay, computeSummary, filterByPeriod, Character, HuntSession } from '@/lib/dashboard';
 
 export default function DashboardShell() {
   const [period, setPeriod] = useState<'24h' | '7d' | '30d' | '90d'>('7d');
   const [showCumulative, setShowCumulative] = useState(false);
+  const [hunts, setHunts] = useState<HuntSession[]>([]);
+  const [character, setCharacter] = useState<Character | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
 
-  // generate mock data — in a real app, fetch from your API
-  const data = useMemo(() => generateMockSeries(90), []);
+  const loadData = useCallback(async () => {
+    const [huntsRes, characterRes] = await Promise.all([fetch('/api/hunts'), fetch('/api/character')]);
+    if (huntsRes.ok) setHunts(await huntsRes.json());
+    if (characterRes.ok) setCharacter(await characterRes.json());
+    setLoading(false);
+  }, []);
 
-  const windowed = useMemo(() => {
-    const now = new Date();
-    let start = new Date();
-    if (period === '24h') start.setDate(now.getDate() - 1);
-    if (period === '7d') start.setDate(now.getDate() - 7);
-    if (period === '30d') start.setDate(now.getDate() - 30);
-    if (period === '90d') start.setDate(now.getDate() - 90);
-    return data.filter((d) => new Date(d.time) >= start);
-  }, [data, period]);
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
-  const summary: SummaryMetrics = useMemo(() => {
-    // compute aggregated metrics for the selected window
-    const xp = windowed.reduce((s, p) => s + p.xp, 0);
-    const hours = Math.max(1, windowed.length);
-    const xpPerHour = xp / hours;
-    const profit = windowed.reduce((s, p) => s + p.profit, 0);
-    const waste = windowed.reduce((s, p) => s + p.waste, 0);
-    const loot = windowed.reduce((s, p) => s + p.loot, 0);
-    const bosses = windowed.reduce((s, p) => s + p.bosses, 0);
-    const deaths = windowed.reduce((s, p) => s + p.deaths, 0);
+  const windowedHunts = useMemo(() => filterByPeriod(hunts, period), [hunts, period]);
+  const windowed = useMemo(() => aggregateByDay(windowedHunts), [windowedHunts]);
+  const allSeries = useMemo(() => aggregateByDay(hunts), [hunts]);
+  const summary = useMemo(() => computeSummary(windowedHunts), [windowedHunts]);
 
-    return { xp, xpPerHour, profit, waste, loot, bosses, deaths };
-  }, [windowed]);
+  if (loading) {
+    return (
+      <GlassCard>
+        <p className="text-muted-300">Carregando seu progresso...</p>
+      </GlassCard>
+    );
+  }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}>
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }} className="space-y-6">
+      {character && <CharacterCard character={character} onChanged={loadData} />}
+
       <GlassCard>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <div>
             <div className="text-sm text-muted-300">Visão geral</div>
             <div className="text-xl font-semibold">Seu progresso — visão rápida</div>
           </div>
           <div className="flex items-center gap-3">
             <Filters period={period} onChange={setPeriod} showCumulative={showCumulative} setShowCumulative={setShowCumulative} />
+            <button onClick={() => setShowAddForm((v) => !v)} className="btn-tibia btn-tibia--primary text-sm">
+              {showAddForm ? 'Fechar' : '+ Nova hunt'}
+            </button>
           </div>
         </div>
 
@@ -67,10 +76,22 @@ export default function DashboardShell() {
           <div className="space-y-6">
             <LootProfit summary={summary} />
             <BossesDeaths summary={summary} />
-            <ProgressTarget data={data} summary={summary} />
+            <ProgressTarget data={allSeries} summary={summary} />
           </div>
         </div>
       </GlassCard>
+
+      {showAddForm && (
+        <HuntForm
+          onSaved={() => {
+            setShowAddForm(false);
+            loadData();
+          }}
+          onCancel={() => setShowAddForm(false)}
+        />
+      )}
+
+      <HuntHistory hunts={hunts} onChanged={loadData} />
     </motion.div>
   );
 }
