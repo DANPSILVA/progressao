@@ -69,6 +69,25 @@ export function aggregateByDay(hunts: HuntSession[]): HourlyPointFull[] {
   return Array.from(byDay.values());
 }
 
+export type SessionPoint = {
+  label: string;
+  xpPerHour: number;
+  xp: number;
+  profit: number;
+};
+
+/** One point per individual hunt (not day-aggregated) — for spotting variance across sessions. */
+export function perSessionSeries(hunts: HuntSession[]): SessionPoint[] {
+  return [...hunts]
+    .sort((a, b) => new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime())
+    .map((h) => ({
+      label: new Date(h.startedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+      xpPerHour: h.durationMin > 0 ? Math.round(h.xpGained / (h.durationMin / 60)) : 0,
+      xp: h.xpGained,
+      profit: h.profit,
+    }));
+}
+
 /** XP/h is derived automatically from total XP gained divided by total hunting time — never entered manually. */
 export function computeSummary(hunts: HuntSession[]): SummaryMetrics {
   const xp = hunts.reduce((s, h) => s + h.xpGained, 0);
