@@ -17,6 +17,9 @@ model User {
 
   character    Character?
   huntSessions HuntSession[]
+
+  friendRequestsSent     Friendship[] @relation("FriendRequestsSent")
+  friendRequestsReceived Friendship[] @relation("FriendRequestsReceived")
 }
 
 model Character {
@@ -47,4 +50,22 @@ model HuntSession {
   updatedAt   DateTime @updatedAt
 
   @@index([userId, startedAt])
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+}
+
+model Friendship {
+  id          String           @id @default(cuid())
+  fromUserId  String
+  fromUser    User             @relation("FriendRequestsSent", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId    String
+  toUser      User             @relation("FriendRequestsReceived", fields: [toUserId], references: [id], onDelete: Cascade)
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([fromUserId, toUserId])
 }

@@ -32,3 +32,7 @@ export const characterSchema = z.object({
   vocation: z.string().max(40).optional().nullable(),
   level: z.coerce.number().int().positive(),
 });
+
+export const friendRequestSchema = z.object({
+  email: z.string().email('Email inválido'),
+});
