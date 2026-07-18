@@ -1,0 +1,49 @@
+/* Tibia-inspired theme utilities and tokens */
+:root{
+  --bg-900:#081014;
+  --bg-800:#0b1a1a;
+  --glass: rgba(255,255,255,0.03);
+  --accent: #9bd66b;
+  --accent-2: #ffcf6b;
+  --neon: #00E0FF;
+  --muted-300: #9aa6a6;
+  --text-100:#E6F3FF;
+  --radius-md: 12px;
+  --card-shadow: 0 10px 30px rgba(2,6,23,0.55);
+}
+
+/* Glassmorphism base */
+.theme-glass {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+  border: 1px solid rgba(255,255,255,0.04);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--card-shadow);
+  border-radius: var(--radius-md);
+}
+
+/* Tibia-like panel trim (wood-ish) */
+.panel-trim {
+  background-image: linear-gradient(180deg, rgba(0,0,0,0.12), rgba(255,255,255,0.02));
+  border: 1px solid rgba(0,0,0,0.6);
+}
+
+/* Soft glow accent */
+.glow-accent {
+  box-shadow: 0 6px 20px rgba(155,214,107,0.06), inset 0 -2px 10px rgba(0,0,0,0.25);
+}
+
+/* Buttons */
+.btn-tibia{
+  display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));color:var(--text-100);font-weight:600;box-shadow:0 6px 18px rgba(2,6,23,0.6);
+}
+.btn-tibia--primary{background:linear-gradient(180deg,var(--accent), #7bb14f);color:#09210a;border:1px solid rgba(0,0,0,0.4)}
+
+/* Logo wrapper */
+.logo-mark{display:inline-flex;align-items:center;gap:10px}
+.logo-mark svg{filter: drop-shadow(0 6px 20px rgba(0,0,0,0.5))}
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce){
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
