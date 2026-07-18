@@ -1,3 +1,6 @@
+#!/bin/bash
+set -e
+cat > "src/app/page.tsx" << 'EOF_page_tsx'
 import Link from 'next/link';
 import './globals.css';
 import GlassCard from '@/components/ui/GlassCard';
@@ -45,3 +48,8 @@ export default function Home() {
     </div>
   );
 }
+EOF_page_tsx
+
+git add -A
+git commit -m "Fix Comecar button on home page not navigating anywhere"
+git push -u origin claude/user-auth-character-progress-00b5p6
