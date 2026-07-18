@@ -1,4 +1,4 @@
-import './tibia.css';
+import '../../styles/tibia.css';
 import GlassCard from '@/components/ui/GlassCard';
 import Button from '@/components/ui/Button';
 import ThemeToggle from '@/components/ui/ThemeToggle';
