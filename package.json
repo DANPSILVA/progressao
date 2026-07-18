@@ -12,6 +12,8 @@
     "next": "14.2.15",
     "framer-motion": "^11.3.19",
     "react-hook-form": "^7.52.2",
+    "zod": "^3.23.8",
+    "@hookform/resolvers": "^3.9.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^2.12.7",
