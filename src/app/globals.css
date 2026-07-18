@@ -1,0 +1,16 @@
+@import "../styles/tibia.css";
+
+html, body, #__next {
+  height: 100%;
+}
+
+body {
+  background: var(--bg-900);
+  color: var(--text-100);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+main {
+  min-height: 100vh;
+}
