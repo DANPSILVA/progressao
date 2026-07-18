@@ -18,8 +18,6 @@ export default function Header() {
         </div>
 
         <nav className="flex items-center gap-4">
-          <Link href="/styleguide" className="text-sm text-muted-300 hover:text-text-100">Styleguide</Link>
-          <Link href="/weather" className="text-sm text-muted-300 hover:text-text-100">Weather</Link>
           {status === 'authenticated' ? (
             <>
               <Link href="/dashboard" className="text-sm text-muted-300 hover:text-text-100">Dashboard</Link>

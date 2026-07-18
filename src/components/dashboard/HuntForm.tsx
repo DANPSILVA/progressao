@@ -38,8 +38,6 @@ export default function HuntForm({
           durationMin: hunt.durationMin,
           xpGained: hunt.xpGained,
           profit: hunt.profit,
-          waste: hunt.waste,
-          loot: hunt.loot,
           bosses: hunt.bosses,
           deaths: hunt.deaths,
           levelAfter: hunt.levelAfter ?? undefined,
@@ -49,8 +47,6 @@ export default function HuntForm({
           durationMin: 60,
           xpGained: 0,
           profit: 0,
-          waste: 0,
-          loot: 0,
           bosses: 0,
           deaths: 0,
         }) as unknown as FormData,
@@ -110,16 +106,6 @@ export default function HuntForm({
           <div>
             <label className="label-tibia">Profit (gp)</label>
             <input type="number" className="input-tibia" {...register('profit')} />
-          </div>
-
-          <div>
-            <label className="label-tibia">Waste (gp)</label>
-            <input type="number" className="input-tibia" {...register('waste')} />
-          </div>
-
-          <div>
-            <label className="label-tibia">Loot (itens)</label>
-            <input type="number" className="input-tibia" {...register('loot')} />
           </div>
 
           <div>

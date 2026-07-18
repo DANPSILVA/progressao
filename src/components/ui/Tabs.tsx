@@ -8,8 +8,24 @@ export type TabItem = {
   content: React.ReactNode;
 };
 
-export default function Tabs({ tabs, defaultTab }: { tabs: TabItem[]; defaultTab?: string }) {
-  const [active, setActive] = useState(defaultTab ?? tabs[0]?.key);
+export default function Tabs({
+  tabs,
+  defaultTab,
+  active: controlledActive,
+  onActiveChange,
+}: {
+  tabs: TabItem[];
+  defaultTab?: string;
+  active?: string;
+  onActiveChange?: (key: string) => void;
+}) {
+  const [internalActive, setInternalActive] = useState(defaultTab ?? tabs[0]?.key);
+  const active = controlledActive ?? internalActive;
+
+  const setActive = (key: string) => {
+    setInternalActive(key);
+    onActiveChange?.(key);
+  };
 
   return (
     <div>
