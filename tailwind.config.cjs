@@ -13,11 +13,19 @@ module.exports = {
         'bg-800': '#0b1a1a',
         'surface-700': 'rgba(255,255,255,0.02)',
         'glass': 'rgba(255,255,255,0.03)',
-        'accent': '#9bd66b', // mossy green accent
-        'accent-2': '#ffcf6b', // warm gold
+        'accent': '#E8B93D', // trophy gold accent
+        'accent-2': '#F0C24B', // lighter gold
         'neon': '#00E0FF',
         'muted-300': '#9aa6a6',
-        'text-100': '#E6F3FF'
+        'text-100': '#E6F3FF',
+        'series-1': '#3987e5',
+        'series-2': '#008300',
+        'series-3': '#d55181',
+        'series-4': '#c98500',
+        'series-5': '#199e70',
+        'series-6': '#d95926',
+        'series-7': '#9085e9',
+        'series-8': '#e66767'
       },
       borderRadius: {
         sm: '8px',

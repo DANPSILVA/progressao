@@ -2,11 +2,12 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { RefreshCw } from 'lucide-react';
 import GlassCard from '@/components/ui/GlassCard';
 import StatsGrid from './StatsGrid';
 import Filters from './Filters';
 import InteractiveChart from './InteractiveChart';
-import LootProfit from './LootProfit';
+import EconomyDonut from './EconomyDonut';
 import BossesDeaths from './BossesDeaths';
 import ProgressTarget from './ProgressTarget';
 import HuntForm from './HuntForm';
@@ -14,19 +15,28 @@ import HuntHistory from './HuntHistory';
 import CharacterCard from './CharacterCard';
 import { aggregateByDay, computeSummary, filterByPeriod, Character, HuntSession } from '@/lib/dashboard';
 
+function formatUpdatedAt(date: Date) {
+  return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
 export default function DashboardShell() {
   const [period, setPeriod] = useState<'24h' | '7d' | '30d' | '90d'>('7d');
   const [showCumulative, setShowCumulative] = useState(false);
   const [hunts, setHunts] = useState<HuntSession[]>([]);
   const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const loadData = useCallback(async () => {
+    setRefreshing(true);
     const [huntsRes, characterRes] = await Promise.all([fetch('/api/hunts'), fetch('/api/character')]);
     if (huntsRes.ok) setHunts(await huntsRes.json());
     if (characterRes.ok) setCharacter(await characterRes.json());
     setLoading(false);
+    setRefreshing(false);
+    setLastUpdated(new Date());
   }, []);
 
   useEffect(() => {
@@ -55,6 +65,19 @@ export default function DashboardShell() {
           <div>
             <div className="text-sm text-muted-300">Visão geral</div>
             <div className="text-xl font-semibold">Seu progresso — visão rápida</div>
+            {lastUpdated && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-300 mt-1">
+                <span>Última atualização: {formatUpdatedAt(lastUpdated)}</span>
+                <button
+                  onClick={loadData}
+                  disabled={refreshing}
+                  aria-label="Atualizar dados"
+                  className="p-0.5 rounded hover:text-accent disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <Filters period={period} onChange={setPeriod} showCumulative={showCumulative} setShowCumulative={setShowCumulative} />
@@ -74,7 +97,7 @@ export default function DashboardShell() {
           </div>
 
           <div className="space-y-6">
-            <LootProfit summary={summary} />
+            <EconomyDonut summary={summary} />
             <BossesDeaths summary={summary} />
             <ProgressTarget data={allSeries} summary={summary} />
           </div>
