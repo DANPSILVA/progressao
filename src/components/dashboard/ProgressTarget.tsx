@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import GlassCard from '@/components/ui/GlassCard';
-import { HourlyPointFull, SummaryMetrics } from '@/lib/dashboardMock';
+import { HourlyPointFull, SummaryMetrics } from '@/lib/dashboard';
 
 export default function ProgressTarget({ data, summary }: { data: HourlyPointFull[]; summary: SummaryMetrics }) {
   // simplistic: assume next level requires fixed XP (e.g., 200k), compute remaining

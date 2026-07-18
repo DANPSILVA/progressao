@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import "../styles/tibia.css";
 
 html, body, #__next {

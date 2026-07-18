@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, CartesianGrid, Bar, BarChart } from 'recharts';
-import { HourlyPointFull } from '@/lib/dashboardMock';
+import { HourlyPointFull } from '@/lib/dashboard';
 
 export default function InteractiveChart({ data, showCumulative }: { data: HourlyPointFull[]; showCumulative: boolean }) {
   // map to chart-friendly

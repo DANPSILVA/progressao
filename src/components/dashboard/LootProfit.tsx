@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { SummaryMetrics } from '@/lib/dashboardMock';
+import { SummaryMetrics } from '@/lib/dashboard';
 import GlassCard from '@/components/ui/GlassCard';
 
 export default function LootProfit({ summary }: { summary: SummaryMetrics }) {

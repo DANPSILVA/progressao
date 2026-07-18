@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String?
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  character    Character?
+  huntSessions HuntSession[]
+}
+
+model Character {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  vocation  String?
+  level     Int      @default(8)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model HuntSession {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startedAt   DateTime
+  durationMin Int
+  xpGained    Int
+  profit      Int      @default(0)
+  waste       Int      @default(0)
+  loot        Int      @default(0)
+  bosses      Int      @default(0)
+  deaths      Int      @default(0)
+  levelAfter  Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, startedAt])
+}

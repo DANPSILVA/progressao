@@ -2,7 +2,7 @@
 
 import React from 'react';
 import StatCard from './StatCard';
-import { SummaryMetrics } from '@/lib/dashboardMock';
+import { SummaryMetrics } from '@/lib/dashboard';
 
 export default function StatsGrid({ summary }: { summary: SummaryMetrics }) {
   return (
