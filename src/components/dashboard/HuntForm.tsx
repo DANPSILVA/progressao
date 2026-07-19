@@ -121,7 +121,11 @@ export default function HuntForm({
 
           <div>
             <label className="label-tibia">Level após (opcional)</label>
-            <input type="number" className="input-tibia" {...register('levelAfter')} />
+            <input type="number" className="input-tibia" placeholder="ex: 150 ou -1" {...register('levelAfter')} />
+            <p className="text-xs text-muted-300 mt-1">
+              Level novo (ex: 150) ou negativo para descontar (ex: -1 se perdeu 1 level).
+            </p>
+            {errors.levelAfter && <p className="text-sm text-red-400 mt-1">{errors.levelAfter.message}</p>}
           </div>
 
           <div>

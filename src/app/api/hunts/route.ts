@@ -37,14 +37,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Dados inválidos' }, { status: 400 });
   }
 
+  let levelAfter = parsed.data.levelAfter;
+  if (typeof levelAfter === 'number' && levelAfter < 0) {
+    const character = await prisma.character.findUnique({ where: { userId } });
+    levelAfter = character ? Math.max(1, character.level + levelAfter) : undefined;
+  }
+
   const hunt = await prisma.huntSession.create({
-    data: { ...parsed.data, userId },
+    data: { ...parsed.data, levelAfter, userId },
   });
 
-  if (parsed.data.levelAfter) {
+  if (levelAfter) {
     await prisma.character.updateMany({
       where: { userId },
-      data: { level: parsed.data.levelAfter },
+      data: { level: levelAfter },
     });
   }
 
