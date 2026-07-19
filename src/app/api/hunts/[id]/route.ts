@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentUserId } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { huntSessionSchema } from '@/lib/validation';
+import { broadcastHuntChange } from '@/lib/supabase/broadcast';
 
 async function requireOwnedHunt(id: string, userId: string) {
   const hunt = await prisma.huntSession.findUnique({ where: { id } });
@@ -11,11 +11,10 @@ async function requireOwnedHunt(id: string, userId: string) {
 }
 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
-  const userId = (session.user as { id: string }).id;
 
   const existing = await requireOwnedHunt(params.id, userId);
   if (!existing) {
@@ -40,15 +39,16 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     });
   }
 
+  await broadcastHuntChange(userId);
+
   return NextResponse.json(hunt);
 }
 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
-  const userId = (session.user as { id: string }).id;
 
   const existing = await requireOwnedHunt(params.id, userId);
   if (!existing) {
@@ -56,6 +56,8 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
   }
 
   await prisma.huntSession.delete({ where: { id: params.id } });
+
+  await broadcastHuntChange(userId);
 
   return NextResponse.json({ ok: true });
 }

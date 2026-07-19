@@ -1,14 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentUserId } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { friendRequestSchema } from '@/lib/validation';
-
-async function currentUserId() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return null;
-  return (session.user as { id: string }).id;
-}
 
 function toPeerSummary(character: { name: string; level: number; vocation: string | null } | null) {
   return {
@@ -19,7 +12,7 @@ function toPeerSummary(character: { name: string; level: number; vocation: strin
 }
 
 export async function GET() {
-  const userId = await currentUserId();
+  const userId = await getCurrentUserId();
   if (!userId) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
@@ -52,7 +45,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const userId = await currentUserId();
+  const userId = await getCurrentUserId();
   if (!userId) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }

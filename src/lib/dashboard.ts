@@ -16,6 +16,7 @@ export type Character = {
   name: string;
   vocation: string | null;
   level: number;
+  avatarUrl: string | null;
 };
 
 export type HourlyPointFull = {

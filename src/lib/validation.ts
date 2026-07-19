@@ -31,6 +31,7 @@ export const characterSchema = z.object({
   name: z.string().min(2).max(60),
   vocation: z.string().max(40).optional().nullable(),
   level: z.coerce.number().int().positive(),
+  avatarUrl: z.string().url().optional().nullable(),
 });
 
 export const friendRequestSchema = z.object({
