@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { HUNTS_UPDATES_CHANNEL } from '@/lib/supabase/channels';
+import { getSupabaseUrl } from './url';
 
 const CHANNEL = HUNTS_UPDATES_CHANNEL;
 
@@ -8,7 +9,7 @@ const CHANNEL = HUNTS_UPDATES_CHANNEL;
  *  auto-refresh until someone reloads the page. */
 export async function broadcastHuntChange(userId: string) {
   try {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+    const supabase = createClient(getSupabaseUrl(), process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
     const channel = supabase.channel(CHANNEL);
 
     await new Promise<void>((resolve) => {
