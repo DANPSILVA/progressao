@@ -15,7 +15,8 @@ export type ParsedHuntAnalyzer = {
 };
 
 function parseAmount(raw: string): number {
-  // RubinOT formats amounts with "." as the thousands separator (e.g. "220.076").
+  // RubinOT uses "." as the thousands separator on the solo Hunt Analyzer but "," on
+  // the Party Hunt one — stripping every non-digit character handles both.
   const cleaned = raw.replace(/[^\d-]/g, '');
   const value = parseInt(cleaned, 10);
   return Number.isNaN(value) ? 0 : value;
@@ -52,4 +53,77 @@ export function parseHuntAnalyzer(text: string): ParsedHuntAnalyzer | null {
     waste: suppliesMatch ? parseAmount(suppliesMatch[1]) : 0,
     deaths: deathsMatch ? parseInt(deathsMatch[1], 10) : 0,
   };
+}
+
+export type ParsedPartyHuntMember = {
+  name: string;
+  loot: number;
+  waste: number;
+  profit: number;
+};
+
+export type ParsedPartyHunt = {
+  startedAt: string;
+  durationMin: number;
+  members: ParsedPartyHuntMember[];
+};
+
+function isPartyHuntTopLevelLine(trimmed: string): boolean {
+  return /^(Session data:|Session:|Loot Type:|Loot:|Supplies:|Balance:)/.test(trimmed);
+}
+
+/** Party Hunt analyzer text has no XP figure at all — instead it breaks Loot/
+ *  Supplies/Balance (plus Damage/Healing, which we don't track) down per member.
+ *  Since there's no way to know which member is "you", the caller shows a picker
+ *  and re-derives loot/waste/profit from whichever member gets selected. */
+export function parsePartyHunt(text: string): ParsedPartyHunt | null {
+  const sessionMatch = text.match(/Session data:\s*From\s+([\d-]+,\s*[\d:]+)\s+to\s+([\d-]+,\s*[\d:]+)/);
+  const durationMatch = text.match(/Session:\s*(\d+):(\d+)h/);
+  if (!durationMatch) return null;
+
+  const startedAt = sessionMatch ? toDateTimeLocal(sessionMatch[1]) : null;
+  const durationMin = parseInt(durationMatch[1], 10) * 60 + parseInt(durationMatch[2], 10);
+
+  const members: ParsedPartyHuntMember[] = [];
+  let current: Partial<ParsedPartyHuntMember> | null = null;
+
+  const flush = () => {
+    if (current?.name) {
+      members.push({
+        name: current.name,
+        loot: current.loot ?? 0,
+        waste: current.waste ?? 0,
+        profit: current.profit ?? 0,
+      });
+    }
+    current = null;
+  };
+
+  for (const rawLine of text.split('\n')) {
+    const line = rawLine.replace(/\s+$/, '');
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    if (!/^[\t ]/.test(line)) {
+      if (isPartyHuntTopLevelLine(trimmed)) continue;
+      flush();
+      current = { name: trimmed.replace(/\s*\(Leader\)\s*$/, '') };
+      continue;
+    }
+
+    if (!current) continue;
+
+    const loot = trimmed.match(/^Loot:\s*(-?[\d.,]+)/);
+    const supplies = trimmed.match(/^Supplies:\s*(-?[\d.,]+)/);
+    const balance = trimmed.match(/^Balance:\s*(-?[\d.,]+)/);
+
+    if (loot) current.loot = parseAmount(loot[1]);
+    else if (supplies) current.waste = parseAmount(supplies[1]);
+    else if (balance) current.profit = parseAmount(balance[1]);
+  }
+  flush();
+
+  if (members.length === 0) return null;
+
+  return { startedAt: startedAt ?? '', durationMin, members };
 }
