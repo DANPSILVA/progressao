@@ -3,6 +3,7 @@ import { getCurrentUserId } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { huntSessionSchema } from '@/lib/validation';
 import { broadcastHuntChange } from '@/lib/supabase/broadcast';
+import { serializeHunt } from '@/lib/serialize';
 
 export async function GET(req: Request) {
   const userId = await getCurrentUserId();
@@ -21,7 +22,7 @@ export async function GET(req: Request) {
     orderBy: { startedAt: 'asc' },
   });
 
-  return NextResponse.json(hunts);
+  return NextResponse.json(hunts.map(serializeHunt));
 }
 
 export async function POST(req: Request) {
@@ -49,5 +50,5 @@ export async function POST(req: Request) {
 
   await broadcastHuntChange(userId);
 
-  return NextResponse.json(hunt, { status: 201 });
+  return NextResponse.json(serializeHunt(hunt), { status: 201 });
 }

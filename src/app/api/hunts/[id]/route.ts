@@ -3,6 +3,7 @@ import { getCurrentUserId } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { huntSessionSchema } from '@/lib/validation';
 import { broadcastHuntChange } from '@/lib/supabase/broadcast';
+import { serializeHunt } from '@/lib/serialize';
 
 async function requireOwnedHunt(id: string, userId: string) {
   const hunt = await prisma.huntSession.findUnique({ where: { id } });
@@ -41,7 +42,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
   await broadcastHuntChange(userId);
 
-  return NextResponse.json(hunt);
+  return NextResponse.json(serializeHunt(hunt));
 }
 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {

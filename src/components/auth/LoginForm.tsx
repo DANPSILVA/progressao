@@ -8,6 +8,7 @@ import Link from 'next/link';
 import GlassCard from '@/components/ui/GlassCard';
 import { loginSchema } from '@/lib/validation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import GoogleSignInButton from './GoogleSignInButton';
 import type { z } from 'zod';
 
 type FormData = z.infer<typeof loginSchema>;
@@ -59,6 +60,14 @@ export default function LoginForm() {
           {isSubmitting ? 'Entrando...' : 'Entrar'}
         </button>
       </form>
+
+      <div className="flex items-center gap-3 my-4">
+        <div className="h-px flex-1 bg-white/10" />
+        <span className="text-xs text-muted-300">ou</span>
+        <div className="h-px flex-1 bg-white/10" />
+      </div>
+
+      <GoogleSignInButton />
 
       <p className="mt-4 text-sm text-muted-300">
         Não tem conta?{' '}
