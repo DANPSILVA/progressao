@@ -1,19 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import GlassCard from '@/components/ui/GlassCard';
 import { loginSchema } from '@/lib/validation';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import type { z } from 'zod';
 
 type FormData = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
   const router = useRouter();
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     register,
@@ -23,13 +24,12 @@ export default function LoginForm() {
 
   const onSubmit = async (data: FormData) => {
     setServerError(null);
-    const res = await signIn('credentials', {
-      redirect: false,
+    const { error } = await supabase.auth.signInWithPassword({
       email: data.email,
       password: data.password,
     });
 
-    if (res?.error) {
+    if (error) {
       setServerError('Email ou senha inválidos');
       return;
     }

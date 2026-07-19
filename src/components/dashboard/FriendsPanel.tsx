@@ -1,15 +1,18 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { UserPlus, Check, X, Trophy } from 'lucide-react';
 import GlassCard from '@/components/ui/GlassCard';
 import { friendRequestSchema } from '@/lib/validation';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { HUNTS_UPDATES_CHANNEL } from '@/lib/supabase/channels';
 
 type PeerEntry = { friendshipId: string; name: string; level: number | null; vocation: string | null };
 type FriendsData = { accepted: PeerEntry[]; incoming: PeerEntry[]; outgoing: PeerEntry[] };
 type RankingEntry = { isMe: boolean; name: string; level: number | null; xp: number; xpPerHour: number; profit: number };
 
 export default function FriendsPanel({ period }: { period: '24h' | '7d' | '30d' | '90d' }) {
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [data, setData] = useState<FriendsData | null>(null);
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [email, setEmail] = useState('');
@@ -36,6 +39,21 @@ export default function FriendsPanel({ period }: { period: '24h' | '7d' | '30d' 
   useEffect(() => {
     loadRanking();
   }, [loadRanking]);
+
+  useEffect(() => {
+    // Any friend (or the player) saving/editing/deleting a hunt broadcasts here, so the
+    // ranking refreshes live instead of waiting for a manual page reload.
+    const channel = supabase
+      .channel(HUNTS_UPDATES_CHANNEL)
+      .on('broadcast', { event: 'hunt-change' }, () => {
+        loadRanking();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, loadRanking]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();

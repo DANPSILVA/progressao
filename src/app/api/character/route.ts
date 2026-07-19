@@ -1,26 +1,23 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentUserId } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { characterSchema } from '@/lib/validation';
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
-  const userId = (session.user as { id: string }).id;
 
   const character = await prisma.character.findUnique({ where: { userId } });
   return NextResponse.json(character);
 }
 
 export async function PUT(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
-  const userId = (session.user as { id: string }).id;
 
   const body = await req.json().catch(() => null);
   const parsed = characterSchema.safeParse(body);

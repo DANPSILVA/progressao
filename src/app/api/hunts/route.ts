@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentUserId } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { huntSessionSchema } from '@/lib/validation';
+import { broadcastHuntChange } from '@/lib/supabase/broadcast';
 
 export async function GET(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
-  const userId = (session.user as { id: string }).id;
 
   const { searchParams } = new URL(req.url);
   const since = searchParams.get('since');
@@ -26,11 +25,10 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
-  const userId = (session.user as { id: string }).id;
 
   const body = await req.json().catch(() => null);
   const parsed = huntSessionSchema.safeParse(body);
@@ -48,6 +46,8 @@ export async function POST(req: Request) {
       data: { level: parsed.data.levelAfter },
     });
   }
+
+  await broadcastHuntChange(userId);
 
   return NextResponse.json(hunt, { status: 201 });
 }

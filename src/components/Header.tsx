@@ -1,11 +1,22 @@
 'use client';
 
+import React, { useMemo } from 'react';
 import Link from 'next/link';
-import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import { useSupabaseUser } from '@/lib/supabase/useUser';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 export default function Header() {
-  const { data: session, status } = useSession();
+  const router = useRouter();
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+  const { user, loading } = useSupabaseUser();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
+    router.refresh();
+  };
 
   return (
     <header className="w-full border-b border-white/6 bg-gradient-to-b from-[rgba(0,0,0,0.06)] to-transparent">
@@ -18,15 +29,17 @@ export default function Header() {
         </div>
 
         <nav className="flex items-center gap-4">
-          {status === 'authenticated' ? (
+          {user ? (
             <>
               <Link href="/dashboard" className="text-sm text-muted-300 hover:text-text-100">Dashboard</Link>
-              <span className="text-sm text-muted-300 hidden sm:inline">{session.user?.name ?? session.user?.email}</span>
-              <button onClick={() => signOut({ callbackUrl: '/' })} className="btn-tibia text-sm">
+              <span className="text-sm text-muted-300 hidden sm:inline">
+                {(user.user_metadata as { name?: string })?.name ?? user.email}
+              </span>
+              <button onClick={handleSignOut} className="btn-tibia text-sm">
                 Sair
               </button>
             </>
-          ) : status === 'loading' ? null : (
+          ) : loading ? null : (
             <>
               <Link href="/login" className="text-sm text-muted-300 hover:text-text-100">Entrar</Link>
               <Link href="/register" className="btn-tibia btn-tibia--primary text-sm">Cadastrar</Link>

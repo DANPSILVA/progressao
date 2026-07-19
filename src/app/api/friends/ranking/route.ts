@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentUserId } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 
 const PERIODS = ['24h', '7d', '30d', '90d'] as const;
@@ -17,11 +16,10 @@ function cutoffFor(period: Period) {
 }
 
 export async function GET(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
-  const userId = (session.user as { id: string }).id;
 
   const { searchParams } = new URL(req.url);
   const periodParam = searchParams.get('period');

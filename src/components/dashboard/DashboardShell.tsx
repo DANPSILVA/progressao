@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
 import GlassCard from '@/components/ui/GlassCard';
 import Tabs from '@/components/ui/Tabs';
+import Sidebar from './Sidebar';
 import StatsGrid from './StatsGrid';
 import Filters from './Filters';
 import PeriodFilter from './PeriodFilter';
@@ -165,21 +166,37 @@ export default function DashboardShell() {
     </div>
   );
 
+  const panels: Record<string, React.ReactNode> = {
+    overview: <GlassCard>{overviewTab}</GlassCard>,
+    history: historyTab,
+    stats: statsTab,
+    ranking: <RubinOtRanking />,
+    friends: friendsTab,
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }} className="space-y-6">
       {character && <CharacterCard character={character} onChanged={loadData} />}
 
-      <Tabs
-        active={activeTab}
-        onActiveChange={setActiveTab}
-        tabs={[
-          { key: 'overview', label: 'Visão Geral', content: <GlassCard>{overviewTab}</GlassCard> },
-          { key: 'history', label: 'Histórico de Hunts', content: historyTab },
-          { key: 'stats', label: 'Estatísticas', content: statsTab },
-          { key: 'friends', label: 'Amigos', content: friendsTab },
-          { key: 'ranking', label: 'Ranking RubinOT', content: <RubinOtRanking /> },
-        ]}
-      />
+      {/* Mobile: keep a simple tab strip since the sidebar is desktop-only. */}
+      <div className="md:hidden">
+        <Tabs
+          active={activeTab}
+          onActiveChange={setActiveTab}
+          tabs={[
+            { key: 'overview', label: 'Visão Geral', content: panels.overview },
+            { key: 'history', label: 'Histórico de Hunts', content: panels.history },
+            { key: 'stats', label: 'Estatísticas', content: panels.stats },
+            { key: 'ranking', label: 'Ranking RubinOT', content: panels.ranking },
+            { key: 'friends', label: 'Amigos', content: panels.friends },
+          ]}
+        />
+      </div>
+
+      <div className="hidden md:flex gap-6 items-start">
+        <Sidebar active={activeTab} onChange={setActiveTab} />
+        <div className="flex-1 min-w-0">{panels[activeTab]}</div>
+      </div>
     </motion.div>
   );
 }
