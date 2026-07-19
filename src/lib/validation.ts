@@ -46,7 +46,12 @@ export const huntSessionSchema = z.object({
   loot: z.coerce.number().int().default(0),
   bosses: z.coerce.number().int().min(0).default(0),
   deaths: z.coerce.number().int().min(0).default(0),
-  levelAfter: z.preprocess(emptyToUndefined, z.coerce.number().int().positive().optional()),
+  // Positive = new absolute character level; negative = a level deduction (e.g. a death)
+  // to subtract from the character's current level. Zero isn't meaningful either way.
+  levelAfter: z.preprocess(
+    emptyToUndefined,
+    z.coerce.number().int().refine((v) => v !== 0, 'Level não pode ser zero').optional()
+  ),
   damageReceived: z.preprocess(emptyToUndefined, z.coerce.number().int().min(0).optional()),
   maxDps: z.preprocess(emptyToUndefined, z.coerce.number().int().min(0).optional()),
   damageTypes: z.preprocess(emptyToUndefined, z.array(damageTypeEntrySchema).optional()),
