@@ -5,17 +5,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
 import { huntSessionSchema } from '@/lib/validation';
-import {
-  parseHuntAnalyzer,
-  parsePartyHunt,
-  parseInputAnalyzer,
-  parseMiscAnalyzer,
-  ParsedPartyHuntMember,
-  ParsedInputAnalyzer,
-  ParsedMiscAnalyzer,
-} from '@/lib/huntAnalyzerParser';
 import GlassCard from '@/components/ui/GlassCard';
 import { HuntSession } from '@/lib/dashboard';
+import AnalyzerImportPanel from './AnalyzerImportPanel';
 
 type FormData = z.infer<typeof huntSessionSchema>;
 
@@ -34,11 +26,6 @@ export default function HuntForm({
   onCancel?: () => void;
 }) {
   const [serverError, setServerError] = useState<string | null>(null);
-  const [analyzerText, setAnalyzerText] = useState('');
-  const [analyzerStatus, setAnalyzerStatus] = useState<'idle' | 'ok' | 'error' | 'party'>('idle');
-  const [partyMembers, setPartyMembers] = useState<ParsedPartyHuntMember[] | null>(null);
-  const [inputAnalyzer, setInputAnalyzer] = useState<ParsedInputAnalyzer | null>(null);
-  const [miscAnalyzer, setMiscAnalyzer] = useState<ParsedMiscAnalyzer | null>(null);
   const {
     register,
     handleSubmit,
@@ -80,67 +67,10 @@ export default function HuntForm({
   const durationMin = Number(watch('durationMin')) || 0;
   const xpPerHourPreview = durationMin > 0 ? Math.round(xpGained / (durationMin / 60)) : 0;
 
-  const handleDetect = () => {
-    let matched = false;
-    let needsPartyPick = false;
-
-    const solo = parseHuntAnalyzer(analyzerText);
-    if (solo) {
-      matched = true;
-      setPartyMembers(null);
-      if (solo.startedAt) setValue('startedAt', solo.startedAt as unknown as FormData['startedAt']);
-      setValue('durationMin', solo.durationMin as FormData['durationMin']);
-      setValue('xpGained', solo.xpGained as FormData['xpGained']);
-      setValue('profit', solo.profit as FormData['profit']);
-      setValue('waste', solo.waste as FormData['waste']);
-      setValue('loot', solo.loot as FormData['loot']);
-      setValue('deaths', solo.deaths as FormData['deaths']);
-    } else {
-      const party = parsePartyHunt(analyzerText);
-      if (party) {
-        matched = true;
-        needsPartyPick = true;
-        if (party.startedAt) setValue('startedAt', party.startedAt as unknown as FormData['startedAt']);
-        setValue('durationMin', party.durationMin as FormData['durationMin']);
-        setPartyMembers(party.members);
-      } else {
-        setPartyMembers(null);
-      }
-    }
-
-    // Input Analyzer (damage taken) and Misc Analyzer (Charm/Imbuement/Item Upgrade)
-    // data can each show up on their own or alongside any of the above, so both are
-    // checked independently rather than as more "else if" branches.
-    const input = parseInputAnalyzer(analyzerText);
-    if (input) {
-      matched = true;
-      setValue('damageReceived', input.damageReceived as FormData['damageReceived']);
-      setValue('maxDps', input.maxDps as FormData['maxDps']);
-      setValue('damageTypes', input.damageTypes as FormData['damageTypes']);
-      setValue('damageSources', input.damageSources as FormData['damageSources']);
-      setInputAnalyzer(input);
-    } else {
-      setInputAnalyzer(null);
-    }
-
-    const misc = parseMiscAnalyzer(analyzerText);
-    if (misc) {
-      matched = true;
-      setValue('miscData', misc as FormData['miscData']);
-      setMiscAnalyzer(misc);
-    } else {
-      setMiscAnalyzer(null);
-    }
-
-    setAnalyzerStatus(!matched ? 'error' : needsPartyPick ? 'party' : 'ok');
-  };
-
-  const handlePickPartyMember = (memberName: string) => {
-    const member = partyMembers?.find((m) => m.name === memberName);
-    if (!member) return;
-    setValue('profit', member.profit as FormData['profit']);
-    setValue('waste', member.waste as FormData['waste']);
-    setValue('loot', member.loot as FormData['loot']);
+  const applyAnalyzerPatch = (patch: Record<string, unknown>) => {
+    Object.entries(patch).forEach(([key, value]) => {
+      setValue(key as keyof FormData, value as never);
+    });
   };
 
   const onSubmit = async (data: FormData) => {
@@ -165,65 +95,7 @@ export default function HuntForm({
 
   return (
     <GlassCard title={hunt ? 'Editar hunt' : 'Registrar nova hunt'}>
-      <div className="mb-5 pb-5 border-b border-white/6">
-        <label className="label-tibia">Colar Hunt Analyzer / Party Hunt / Input Analyzer / Miscellaneous (opcional)</label>
-        <textarea
-          className="input-tibia w-full h-28 font-mono text-xs"
-          placeholder="Cole aqui o texto copiado de um dos analisadores do jogo..."
-          value={analyzerText}
-          onChange={(e) => {
-            setAnalyzerText(e.target.value);
-            setAnalyzerStatus('idle');
-          }}
-        />
-        <div className="flex items-center gap-3 mt-2">
-          <button type="button" onClick={handleDetect} className="btn-tibia text-sm" disabled={!analyzerText.trim()}>
-            Detectar dados
-          </button>
-          {analyzerStatus === 'ok' && (
-            <span className="text-sm text-accent">Dados detectados! Confira os campos abaixo.</span>
-          )}
-          {analyzerStatus === 'error' && (
-            <span className="text-sm text-red-400">
-              Não reconheci esse texto — confira se é do Hunt Analyzer, Party Hunt, Input Analyzer ou Miscellaneous.
-            </span>
-          )}
-        </div>
-
-        {inputAnalyzer && (
-          <p className="text-xs text-muted-300 mt-2">
-            Dano recebido detectado: {inputAnalyzer.damageReceived.toLocaleString()} (pico de DPS:{' '}
-            {inputAnalyzer.maxDps.toLocaleString()})
-          </p>
-        )}
-
-        {miscAnalyzer && (
-          <p className="text-xs text-muted-300 mt-2">
-            Dados de charms/imbuements/upgrades detectados —{' '}
-            {miscAnalyzer.charmData.length + miscAnalyzer.imbuementData.length + miscAnalyzer.itemUpgrade.length}{' '}
-            item(ns).
-          </p>
-        )}
-
-        {analyzerStatus === 'party' && partyMembers && (
-          <div className="mt-3">
-            <label className="label-tibia">Qual desses é o seu personagem?</label>
-            <select className="input-tibia" defaultValue="" onChange={(e) => handlePickPartyMember(e.target.value)}>
-              <option value="" disabled>
-                Selecione...
-              </option>
-              {partyMembers.map((m) => (
-                <option key={m.name} value={m.name}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-muted-300 mt-1">
-              Esse formato não traz XP ganho por membro — preencha esse campo manualmente abaixo.
-            </p>
-          </div>
-        )}
-      </div>
+      <AnalyzerImportPanel onApply={applyAnalyzerPatch} />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
         <input type="hidden" {...register('waste')} />
