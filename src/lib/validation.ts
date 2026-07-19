@@ -26,6 +26,17 @@ export const damageSourceEntrySchema = z.object({
   percentage: z.number(),
 });
 
+export const miscEntrySchema = z.object({
+  label: z.string(),
+  value: z.string(),
+});
+
+export const miscDataSchema = z.object({
+  charmData: z.array(miscEntrySchema),
+  imbuementData: z.array(miscEntrySchema),
+  itemUpgrade: z.array(miscEntrySchema),
+});
+
 export const huntSessionSchema = z.object({
   startedAt: z.coerce.date(),
   durationMin: z.coerce.number().int().positive('Duração deve ser maior que zero'),
@@ -40,6 +51,7 @@ export const huntSessionSchema = z.object({
   maxDps: z.preprocess(emptyToUndefined, z.coerce.number().int().min(0).optional()),
   damageTypes: z.preprocess(emptyToUndefined, z.array(damageTypeEntrySchema).optional()),
   damageSources: z.preprocess(emptyToUndefined, z.array(damageSourceEntrySchema).optional()),
+  miscData: z.preprocess(emptyToUndefined, miscDataSchema.optional()),
 });
 
 export const characterSchema = z.object({

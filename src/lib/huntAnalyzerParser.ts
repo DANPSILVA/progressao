@@ -178,3 +178,48 @@ export function parseInputAnalyzer(text: string): ParsedInputAnalyzer | null {
     damageSources,
   };
 }
+
+export type MiscEntry = { label: string; value: string };
+export type ParsedMiscAnalyzer = {
+  charmData: MiscEntry[];
+  imbuementData: MiscEntry[];
+  itemUpgrade: MiscEntry[];
+};
+
+const MISC_SECTION_HEADERS = ['Charm Data', 'Imbuement Data', 'Item Upgrade'] as const;
+
+/** Miscellaneous Analyzer text has no session/XP/loot data either — just Charm/
+ *  Imbuement/Item Upgrade sections. Values vary in shape (plain counts, "18.8k"-style
+ *  amounts), so entries are kept as raw label/value strings rather than normalized. */
+export function parseMiscAnalyzer(text: string): ParsedMiscAnalyzer | null {
+  const hasAnySection = new RegExp(`^(${MISC_SECTION_HEADERS.join('|')}):$`, 'm').test(text);
+  if (!hasAnySection) return null;
+
+  const sections: Record<(typeof MISC_SECTION_HEADERS)[number], MiscEntry[]> = {
+    'Charm Data': [],
+    'Imbuement Data': [],
+    'Item Upgrade': [],
+  };
+  let current: (typeof MISC_SECTION_HEADERS)[number] | null = null;
+
+  for (const rawLine of text.split('\n')) {
+    const trimmed = rawLine.trim();
+    if (!trimmed) continue;
+
+    const headerMatch = trimmed.match(/^(Charm Data|Imbuement Data|Item Upgrade):$/);
+    if (headerMatch) {
+      current = headerMatch[1] as (typeof MISC_SECTION_HEADERS)[number];
+      continue;
+    }
+    if (!current) continue;
+
+    const entryMatch = trimmed.match(/^-\s*(.+?):\s*(.+)$/);
+    if (entryMatch) sections[current].push({ label: entryMatch[1], value: entryMatch[2] });
+  }
+
+  return {
+    charmData: sections['Charm Data'],
+    imbuementData: sections['Imbuement Data'],
+    itemUpgrade: sections['Item Upgrade'],
+  };
+}

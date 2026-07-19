@@ -56,12 +56,17 @@ export default function HuntHistory({ hunts, onChanged }: { hunts: HuntSession[]
               {sorted.map((h) => {
                 const xpPerHour = h.durationMin > 0 ? Math.round(h.xpGained / (h.durationMin / 60)) : 0;
                 const hasDamageDetail = h.damageReceived !== null;
+                const miscEntries = h.miscData
+                  ? [...h.miscData.charmData, ...h.miscData.imbuementData, ...h.miscData.itemUpgrade]
+                  : [];
+                const hasMiscDetail = miscEntries.length > 0;
+                const hasExpandableDetail = hasDamageDetail || hasMiscDetail;
                 const isExpanded = expandedId === h.id;
                 return (
                   <React.Fragment key={h.id}>
                     <tr className="border-t border-white/6">
                       <td className="py-2 pr-2">
-                        {hasDamageDetail && (
+                        {hasExpandableDetail && (
                           <button
                             onClick={() => setExpandedId(isExpanded ? null : h.id)}
                             aria-label={isExpanded ? 'Recolher detalhes de dano' : 'Ver detalhes de dano'}
@@ -90,32 +95,34 @@ export default function HuntHistory({ hunts, onChanged }: { hunts: HuntSession[]
                         </button>
                       </td>
                     </tr>
-                    {isExpanded && hasDamageDetail && (
+                    {isExpanded && hasExpandableDetail && (
                       <tr className="border-t border-white/6 bg-white/[0.02]">
                         <td></td>
                         <td colSpan={7} className="py-3 pr-4">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                              <div className="text-xs text-muted-300 mb-1">
-                                Pico de DPS: {h.maxDps?.toLocaleString() ?? '—'}
+                            {hasDamageDetail && (
+                              <div>
+                                <div className="text-xs text-muted-300 mb-1">
+                                  Pico de DPS: {h.maxDps?.toLocaleString() ?? '—'}
+                                </div>
+                                {h.damageTypes && h.damageTypes.length > 0 && (
+                                  <>
+                                    <div className="text-xs text-muted-300 mb-1 mt-2">Tipos de dano</div>
+                                    <ul className="space-y-0.5">
+                                      {h.damageTypes.map((d) => (
+                                        <li key={d.type} className="flex justify-between text-xs">
+                                          <span>{d.type}</span>
+                                          <span className="text-muted-300">
+                                            {d.amount.toLocaleString()} ({d.percentage}%)
+                                          </span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </>
+                                )}
                               </div>
-                              {h.damageTypes && h.damageTypes.length > 0 && (
-                                <>
-                                  <div className="text-xs text-muted-300 mb-1 mt-2">Tipos de dano</div>
-                                  <ul className="space-y-0.5">
-                                    {h.damageTypes.map((d) => (
-                                      <li key={d.type} className="flex justify-between text-xs">
-                                        <span>{d.type}</span>
-                                        <span className="text-muted-300">
-                                          {d.amount.toLocaleString()} ({d.percentage}%)
-                                        </span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </>
-                              )}
-                            </div>
-                            {h.damageSources && h.damageSources.length > 0 && (
+                            )}
+                            {hasDamageDetail && h.damageSources && h.damageSources.length > 0 && (
                               <div>
                                 <div className="text-xs text-muted-300 mb-1">Fontes de dano</div>
                                 <ul className="space-y-0.5">
@@ -125,6 +132,19 @@ export default function HuntHistory({ hunts, onChanged }: { hunts: HuntSession[]
                                       <span className="text-muted-300">
                                         {s.amount.toLocaleString()} ({s.percentage}%)
                                       </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {hasMiscDetail && (
+                              <div>
+                                <div className="text-xs text-muted-300 mb-1">Charms / Imbuements / Upgrades</div>
+                                <ul className="space-y-0.5">
+                                  {miscEntries.map((m, i) => (
+                                    <li key={`${m.label}-${i}`} className="flex justify-between text-xs">
+                                      <span>{m.label}</span>
+                                      <span className="text-muted-300">{m.value}</span>
                                     </li>
                                   ))}
                                 </ul>
