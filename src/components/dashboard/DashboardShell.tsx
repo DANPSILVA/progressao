@@ -15,6 +15,7 @@ import ProgressTarget from './ProgressTarget';
 import HuntForm from './HuntForm';
 import HuntHistory from './HuntHistory';
 import CharacterCard from './CharacterCard';
+import CreateCharacterForm from './CreateCharacterForm';
 import XpEvolutionChart from './XpEvolutionChart';
 import ProfitPerDayChart from './ProfitPerDayChart';
 import XpPerHourSessionChart from './XpPerHourSessionChart';
@@ -63,6 +64,11 @@ export default function DashboardShell() {
         <p className="text-muted-300">Carregando seu progresso...</p>
       </GlassCard>
     );
+  }
+
+  if (!character) {
+    // Google/OAuth sign-ins skip the register form's character-name field.
+    return <CreateCharacterForm onCreated={loadData} />;
   }
 
   const header = (

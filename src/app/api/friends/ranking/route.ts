@@ -40,9 +40,9 @@ export async function GET(req: Request) {
   const ranking = allIds.map((id) => {
     const character = characters.find((c) => c.userId === id);
     const userHunts = hunts.filter((h) => h.userId === id);
-    const xp = userHunts.reduce((s, h) => s + h.xpGained, 0);
+    const xp = userHunts.reduce((s, h) => s + Number(h.xpGained), 0);
     const durationMin = userHunts.reduce((s, h) => s + h.durationMin, 0);
-    const profit = userHunts.reduce((s, h) => s + h.profit, 0);
+    const profit = userHunts.reduce((s, h) => s + Number(h.profit), 0);
     const xpPerHour = durationMin > 0 ? Math.round(xp / (durationMin / 60)) : 0;
 
     return {
