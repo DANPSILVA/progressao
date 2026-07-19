@@ -1,3 +1,20 @@
+#!/bin/bash
+set -e
+
+cat > ".env.example" << 'EOF__env_example_'
+# Postgres connection strings from your Supabase project (Connect → ORMs → Prisma)
+# DATABASE_URL: pooled connection, used by the app at runtime (port 6543)
+DATABASE_URL="postgresql://postgres.xxxxxxxx:password@aws-0-xx-xxxx-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+# DIRECT_URL: direct connection, used only for running migrations (port 5432)
+DIRECT_URL="postgresql://postgres.xxxxxxxx:password@aws-0-xx-xxxx-1.pooler.supabase.com:5432/postgres"
+
+# Supabase project settings
+# Settings → API
+NEXT_PUBLIC_SUPABASE_URL="https://xxxxxxxx.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="replace-with-your-anon-public-key"
+EOF__env_example_
+
+cat > "prisma/schema.prisma" << 'EOF_prisma_schema_prisma_'
 generator client {
   provider = "prisma-client-js"
 }
@@ -72,3 +89,8 @@ model Friendship {
 
   @@unique([fromUserId, toUserId])
 }
+EOF_prisma_schema_prisma_
+
+git add -A
+git commit -m "Split DATABASE_URL/DIRECT_URL for Prisma against Supabase's pooler"
+git push -u origin claude/user-auth-character-progress-00b5p6
