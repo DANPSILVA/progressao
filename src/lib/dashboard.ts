@@ -1,5 +1,7 @@
 export type DamageTypeEntry = { type: string; amount: number; percentage: number };
 export type DamageSourceEntry = { name: string; amount: number; percentage: number };
+export type MiscEntry = { label: string; value: string };
+export type MiscData = { charmData: MiscEntry[]; imbuementData: MiscEntry[]; itemUpgrade: MiscEntry[] };
 
 export type HuntSession = {
   id: string;
@@ -16,6 +18,7 @@ export type HuntSession = {
   maxDps: number | null;
   damageTypes: DamageTypeEntry[] | null;
   damageSources: DamageSourceEntry[] | null;
+  miscData: MiscData | null;
 };
 
 export type Character = {

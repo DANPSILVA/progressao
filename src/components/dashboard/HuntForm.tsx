@@ -9,8 +9,10 @@ import {
   parseHuntAnalyzer,
   parsePartyHunt,
   parseInputAnalyzer,
+  parseMiscAnalyzer,
   ParsedPartyHuntMember,
   ParsedInputAnalyzer,
+  ParsedMiscAnalyzer,
 } from '@/lib/huntAnalyzerParser';
 import GlassCard from '@/components/ui/GlassCard';
 import { HuntSession } from '@/lib/dashboard';
@@ -36,6 +38,7 @@ export default function HuntForm({
   const [analyzerStatus, setAnalyzerStatus] = useState<'idle' | 'ok' | 'error' | 'party'>('idle');
   const [partyMembers, setPartyMembers] = useState<ParsedPartyHuntMember[] | null>(null);
   const [inputAnalyzer, setInputAnalyzer] = useState<ParsedInputAnalyzer | null>(null);
+  const [miscAnalyzer, setMiscAnalyzer] = useState<ParsedMiscAnalyzer | null>(null);
   const {
     register,
     handleSubmit,
@@ -59,6 +62,7 @@ export default function HuntForm({
           maxDps: hunt.maxDps ?? undefined,
           damageTypes: hunt.damageTypes ?? undefined,
           damageSources: hunt.damageSources ?? undefined,
+          miscData: hunt.miscData ?? undefined,
         }
       : {
           startedAt: toLocalDateTimeInput(new Date()),
@@ -104,8 +108,9 @@ export default function HuntForm({
       }
     }
 
-    // Input Analyzer (damage taken) data can show up on its own or alongside either of
-    // the above, so it's checked independently rather than as another "else if" branch.
+    // Input Analyzer (damage taken) and Misc Analyzer (Charm/Imbuement/Item Upgrade)
+    // data can each show up on their own or alongside any of the above, so both are
+    // checked independently rather than as more "else if" branches.
     const input = parseInputAnalyzer(analyzerText);
     if (input) {
       matched = true;
@@ -116,6 +121,15 @@ export default function HuntForm({
       setInputAnalyzer(input);
     } else {
       setInputAnalyzer(null);
+    }
+
+    const misc = parseMiscAnalyzer(analyzerText);
+    if (misc) {
+      matched = true;
+      setValue('miscData', misc as FormData['miscData']);
+      setMiscAnalyzer(misc);
+    } else {
+      setMiscAnalyzer(null);
     }
 
     setAnalyzerStatus(!matched ? 'error' : needsPartyPick ? 'party' : 'ok');
@@ -152,7 +166,7 @@ export default function HuntForm({
   return (
     <GlassCard title={hunt ? 'Editar hunt' : 'Registrar nova hunt'}>
       <div className="mb-5 pb-5 border-b border-white/6">
-        <label className="label-tibia">Colar Hunt Analyzer / Party Hunt / Input Analyzer (opcional)</label>
+        <label className="label-tibia">Colar Hunt Analyzer / Party Hunt / Input Analyzer / Miscellaneous (opcional)</label>
         <textarea
           className="input-tibia w-full h-28 font-mono text-xs"
           placeholder="Cole aqui o texto copiado de um dos analisadores do jogo..."
@@ -171,7 +185,7 @@ export default function HuntForm({
           )}
           {analyzerStatus === 'error' && (
             <span className="text-sm text-red-400">
-              Não reconheci esse texto — confira se é do Hunt Analyzer, Party Hunt ou Input Analyzer.
+              Não reconheci esse texto — confira se é do Hunt Analyzer, Party Hunt, Input Analyzer ou Miscellaneous.
             </span>
           )}
         </div>
@@ -180,6 +194,14 @@ export default function HuntForm({
           <p className="text-xs text-muted-300 mt-2">
             Dano recebido detectado: {inputAnalyzer.damageReceived.toLocaleString()} (pico de DPS:{' '}
             {inputAnalyzer.maxDps.toLocaleString()})
+          </p>
+        )}
+
+        {miscAnalyzer && (
+          <p className="text-xs text-muted-300 mt-2">
+            Dados de charms/imbuements/upgrades detectados —{' '}
+            {miscAnalyzer.charmData.length + miscAnalyzer.imbuementData.length + miscAnalyzer.itemUpgrade.length}{' '}
+            item(ns).
           </p>
         )}
 

@@ -56,6 +56,10 @@ model HuntSession {
   maxDps         Int?
   damageTypes    Json?
   damageSources  Json?
+  // From the Miscellaneous Analyzer: Charm/Imbuement/Item Upgrade data. Values are
+  // free-form (counts, "18.8k"-style amounts, etc.) so this is stored as raw
+  // label/value pairs per section rather than normalized numbers.
+  miscData       Json?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
