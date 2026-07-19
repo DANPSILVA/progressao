@@ -1,3 +1,6 @@
+export type DamageTypeEntry = { type: string; amount: number; percentage: number };
+export type DamageSourceEntry = { name: string; amount: number; percentage: number };
+
 export type HuntSession = {
   id: string;
   startedAt: string;
@@ -9,6 +12,10 @@ export type HuntSession = {
   bosses: number;
   deaths: number;
   levelAfter: number | null;
+  damageReceived: number | null;
+  maxDps: number | null;
+  damageTypes: DamageTypeEntry[] | null;
+  damageSources: DamageSourceEntry[] | null;
 };
 
 export type Character = {

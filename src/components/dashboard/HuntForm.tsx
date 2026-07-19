@@ -5,7 +5,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
 import { huntSessionSchema } from '@/lib/validation';
-import { parseHuntAnalyzer, parsePartyHunt, ParsedPartyHuntMember } from '@/lib/huntAnalyzerParser';
+import {
+  parseHuntAnalyzer,
+  parsePartyHunt,
+  parseInputAnalyzer,
+  ParsedPartyHuntMember,
+  ParsedInputAnalyzer,
+} from '@/lib/huntAnalyzerParser';
 import GlassCard from '@/components/ui/GlassCard';
 import { HuntSession } from '@/lib/dashboard';
 
@@ -29,6 +35,7 @@ export default function HuntForm({
   const [analyzerText, setAnalyzerText] = useState('');
   const [analyzerStatus, setAnalyzerStatus] = useState<'idle' | 'ok' | 'error' | 'party'>('idle');
   const [partyMembers, setPartyMembers] = useState<ParsedPartyHuntMember[] | null>(null);
+  const [inputAnalyzer, setInputAnalyzer] = useState<ParsedInputAnalyzer | null>(null);
   const {
     register,
     handleSubmit,
@@ -48,6 +55,10 @@ export default function HuntForm({
           bosses: hunt.bosses,
           deaths: hunt.deaths,
           levelAfter: hunt.levelAfter ?? undefined,
+          damageReceived: hunt.damageReceived ?? undefined,
+          maxDps: hunt.maxDps ?? undefined,
+          damageTypes: hunt.damageTypes ?? undefined,
+          damageSources: hunt.damageSources ?? undefined,
         }
       : {
           startedAt: toLocalDateTimeInput(new Date()),
@@ -66,8 +77,12 @@ export default function HuntForm({
   const xpPerHourPreview = durationMin > 0 ? Math.round(xpGained / (durationMin / 60)) : 0;
 
   const handleDetect = () => {
+    let matched = false;
+    let needsPartyPick = false;
+
     const solo = parseHuntAnalyzer(analyzerText);
     if (solo) {
+      matched = true;
       setPartyMembers(null);
       if (solo.startedAt) setValue('startedAt', solo.startedAt as unknown as FormData['startedAt']);
       setValue('durationMin', solo.durationMin as FormData['durationMin']);
@@ -76,21 +91,34 @@ export default function HuntForm({
       setValue('waste', solo.waste as FormData['waste']);
       setValue('loot', solo.loot as FormData['loot']);
       setValue('deaths', solo.deaths as FormData['deaths']);
-      setAnalyzerStatus('ok');
-      return;
+    } else {
+      const party = parsePartyHunt(analyzerText);
+      if (party) {
+        matched = true;
+        needsPartyPick = true;
+        if (party.startedAt) setValue('startedAt', party.startedAt as unknown as FormData['startedAt']);
+        setValue('durationMin', party.durationMin as FormData['durationMin']);
+        setPartyMembers(party.members);
+      } else {
+        setPartyMembers(null);
+      }
     }
 
-    const party = parsePartyHunt(analyzerText);
-    if (party) {
-      if (party.startedAt) setValue('startedAt', party.startedAt as unknown as FormData['startedAt']);
-      setValue('durationMin', party.durationMin as FormData['durationMin']);
-      setPartyMembers(party.members);
-      setAnalyzerStatus('party');
-      return;
+    // Input Analyzer (damage taken) data can show up on its own or alongside either of
+    // the above, so it's checked independently rather than as another "else if" branch.
+    const input = parseInputAnalyzer(analyzerText);
+    if (input) {
+      matched = true;
+      setValue('damageReceived', input.damageReceived as FormData['damageReceived']);
+      setValue('maxDps', input.maxDps as FormData['maxDps']);
+      setValue('damageTypes', input.damageTypes as FormData['damageTypes']);
+      setValue('damageSources', input.damageSources as FormData['damageSources']);
+      setInputAnalyzer(input);
+    } else {
+      setInputAnalyzer(null);
     }
 
-    setPartyMembers(null);
-    setAnalyzerStatus('error');
+    setAnalyzerStatus(!matched ? 'error' : needsPartyPick ? 'party' : 'ok');
   };
 
   const handlePickPartyMember = (memberName: string) => {
@@ -124,10 +152,10 @@ export default function HuntForm({
   return (
     <GlassCard title={hunt ? 'Editar hunt' : 'Registrar nova hunt'}>
       <div className="mb-5 pb-5 border-b border-white/6">
-        <label className="label-tibia">Colar Hunt Analyzer (opcional)</label>
+        <label className="label-tibia">Colar Hunt Analyzer / Party Hunt / Input Analyzer (opcional)</label>
         <textarea
           className="input-tibia w-full h-28 font-mono text-xs"
-          placeholder="Cole aqui o texto copiado do Hunt Analyzer do jogo..."
+          placeholder="Cole aqui o texto copiado de um dos analisadores do jogo..."
           value={analyzerText}
           onChange={(e) => {
             setAnalyzerText(e.target.value);
@@ -142,9 +170,18 @@ export default function HuntForm({
             <span className="text-sm text-accent">Dados detectados! Confira os campos abaixo.</span>
           )}
           {analyzerStatus === 'error' && (
-            <span className="text-sm text-red-400">Não reconheci esse texto — confira se é do Hunt Analyzer ou Party Hunt.</span>
+            <span className="text-sm text-red-400">
+              Não reconheci esse texto — confira se é do Hunt Analyzer, Party Hunt ou Input Analyzer.
+            </span>
           )}
         </div>
+
+        {inputAnalyzer && (
+          <p className="text-xs text-muted-300 mt-2">
+            Dano recebido detectado: {inputAnalyzer.damageReceived.toLocaleString()} (pico de DPS:{' '}
+            {inputAnalyzer.maxDps.toLocaleString()})
+          </p>
+        )}
 
         {analyzerStatus === 'party' && partyMembers && (
           <div className="mt-3">

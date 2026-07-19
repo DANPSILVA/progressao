@@ -127,3 +127,54 @@ export function parsePartyHunt(text: string): ParsedPartyHunt | null {
 
   return { startedAt: startedAt ?? '', durationMin, members };
 }
+
+export type ParsedInputAnalyzer = {
+  damageReceived: number;
+  maxDps: number;
+  damageTypes: { type: string; amount: number; percentage: number }[];
+  damageSources: { name: string; amount: number; percentage: number }[];
+};
+
+/** Input Analyzer text has no session/XP/loot data at all — it's purely a damage-taken
+ *  breakdown ("Total"/"Max-DPS" plus per-element and per-monster lists), so it never
+ *  contributes startedAt/durationMin the way the other two formats do. */
+export function parseInputAnalyzer(text: string): ParsedInputAnalyzer | null {
+  const totalMatch = text.match(/^Total:\s*([\d.,]+)/m);
+  const maxDpsMatch = text.match(/^Max-DPS:\s*([\d.,]+)/m);
+  if (!totalMatch || !maxDpsMatch) return null;
+
+  const damageTypes: { type: string; amount: number; percentage: number }[] = [];
+  const damageSources: { name: string; amount: number; percentage: number }[] = [];
+  let section: 'types' | 'sources' | null = null;
+  const entryPattern = /^(.+?)\s+([\d.,]+)\s+\(([\d.]+)%\)$/;
+
+  for (const rawLine of text.split('\n')) {
+    const trimmed = rawLine.trim();
+    if (!trimmed) continue;
+    if (trimmed === 'Damage Types') {
+      section = 'types';
+      continue;
+    }
+    if (trimmed === 'Damage Sources') {
+      section = 'sources';
+      continue;
+    }
+    if (/^(Received Damage|Total:|Max-DPS:)/.test(trimmed)) continue;
+
+    const match = trimmed.match(entryPattern);
+    if (!match) continue;
+    const [, name, amountRaw, pctRaw] = match;
+    const amount = parseAmount(amountRaw);
+    const percentage = parseFloat(pctRaw);
+
+    if (section === 'types') damageTypes.push({ type: name, amount, percentage });
+    else if (section === 'sources') damageSources.push({ name, amount, percentage });
+  }
+
+  return {
+    damageReceived: parseAmount(totalMatch[1]),
+    maxDps: parseAmount(maxDpsMatch[1]),
+    damageTypes,
+    damageSources,
+  };
+}
