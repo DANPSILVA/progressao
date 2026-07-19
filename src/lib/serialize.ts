@@ -10,5 +10,6 @@ export function serializeHunt(hunt: HuntSession) {
     profit: Number(hunt.profit),
     waste: Number(hunt.waste),
     loot: Number(hunt.loot),
+    damageReceived: hunt.damageReceived === null ? null : Number(hunt.damageReceived),
   };
 }

@@ -11,11 +11,11 @@ datasource db {
 // id has no default: it must equal the corresponding auth.users.id in Supabase.
 // The row itself is created by the handle_new_user() trigger (see migration.sql).
 model User {
-  id           String   @id
-  name         String?
-  email        String   @unique
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id        String   @id
+  name      String?
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   character    Character?
   huntSessions HuntSession[]
@@ -37,20 +37,27 @@ model Character {
 }
 
 model HuntSession {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  startedAt   DateTime
-  durationMin Int
-  xpGained    BigInt
-  profit      BigInt   @default(0)
-  waste       BigInt   @default(0)
-  loot        BigInt   @default(0)
-  bosses      Int      @default(0)
-  deaths      Int      @default(0)
-  levelAfter  Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startedAt      DateTime
+  durationMin    Int
+  xpGained       BigInt
+  profit         BigInt   @default(0)
+  waste          BigInt   @default(0)
+  loot           BigInt   @default(0)
+  bosses         Int      @default(0)
+  deaths         Int      @default(0)
+  levelAfter     Int?
+  // From the Input Analyzer: total damage taken, peak DPS, and the elemental/monster
+  // breakdown as-is (both are variable-length lists, so JSON avoids a join for data
+  // that's only ever displayed, never filtered/aggregated by).
+  damageReceived BigInt?
+  maxDps         Int?
+  damageTypes    Json?
+  damageSources  Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([userId, startedAt])
 }
@@ -61,14 +68,14 @@ enum FriendshipStatus {
 }
 
 model Friendship {
-  id          String           @id @default(cuid())
-  fromUserId  String
-  fromUser    User             @relation("FriendRequestsSent", fields: [fromUserId], references: [id], onDelete: Cascade)
-  toUserId    String
-  toUser      User             @relation("FriendRequestsReceived", fields: [toUserId], references: [id], onDelete: Cascade)
-  status      FriendshipStatus @default(PENDING)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id         String           @id @default(cuid())
+  fromUserId String
+  fromUser   User             @relation("FriendRequestsSent", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId   String
+  toUser     User             @relation("FriendRequestsReceived", fields: [toUserId], references: [id], onDelete: Cascade)
+  status     FriendshipStatus @default(PENDING)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
 
   @@unique([fromUserId, toUserId])
 }
