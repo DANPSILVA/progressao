@@ -52,7 +52,17 @@ export async function GET(req: Request) {
   const shortLivedData = await shortLivedRes.json();
 
   if (!shortLivedRes.ok || !shortLivedData.access_token) {
-    return htmlPage(`<h1>Erro ao trocar o código</h1><pre>${JSON.stringify(shortLivedData, null, 2)}</pre>`, 400);
+    const debug = {
+      httpStatus: shortLivedRes.status,
+      appId,
+      appIdLength: appId.length,
+      appSecretLength: appSecret.length,
+      redirectUriUsed: redirectUri,
+    };
+    return htmlPage(
+      `<h1>Erro ao trocar o código</h1><pre>${JSON.stringify(shortLivedData, null, 2)}</pre><h2>Diagnóstico</h2><pre>${JSON.stringify(debug, null, 2)}</pre>`,
+      400
+    );
   }
 
   const longLivedUrl = new URL('https://graph.instagram.com/access_token');
