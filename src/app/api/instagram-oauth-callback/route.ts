@@ -15,9 +15,16 @@ function htmlPage(body: string, status = 200) {
  */
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const code = searchParams.get('code');
   const error = searchParams.get('error');
   const errorDescription = searchParams.get('error_description');
+
+  // Read `code` from the raw query string ourselves instead of via
+  // URLSearchParams: form/query decoding turns a literal "+" into a space,
+  // and Instagram's authorization codes can contain "+" without it being
+  // percent-encoded, which would silently corrupt the code.
+  const rawQuery = req.url.split('?')[1]?.split('#')[0] ?? '';
+  const codeMatch = rawQuery.match(/(?:^|&)code=([^&]*)/);
+  const code = codeMatch ? decodeURIComponent(codeMatch[1]) : null;
 
   if (error) {
     return htmlPage(`<h1>Erro</h1><p>${error}: ${errorDescription}</p>`, 400);
@@ -64,6 +71,7 @@ export async function GET(req: Request) {
       redirectUriUsed: redirectUri,
       rawCode: code,
       rawCodeLength: code.length,
+      rawCodeContainsSpace: code.includes(' '),
       cleanedCodeLength: cleanedCode.length,
       fullRequestUrl: req.url,
     };
