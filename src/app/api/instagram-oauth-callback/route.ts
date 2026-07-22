@@ -38,16 +38,19 @@ export async function GET(req: Request) {
     );
   }
 
+  // Meta's own examples for this endpoint use multipart/form-data (curl -F), not
+  // urlencoded — sending it urlencoded made the server unable to read client_id,
+  // which is what produced the generic "Invalid platform app" error.
+  const shortLivedForm = new FormData();
+  shortLivedForm.set('client_id', appId);
+  shortLivedForm.set('client_secret', appSecret);
+  shortLivedForm.set('grant_type', 'authorization_code');
+  shortLivedForm.set('redirect_uri', redirectUri);
+  shortLivedForm.set('code', code.replace(/#_$/, ''));
+
   const shortLivedRes = await fetch('https://api.instagram.com/oauth/access_token', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: appId,
-      client_secret: appSecret,
-      grant_type: 'authorization_code',
-      redirect_uri: redirectUri,
-      code: code.replace(/#_$/, ''),
-    }),
+    body: shortLivedForm,
   });
   const shortLivedData = await shortLivedRes.json();
 
